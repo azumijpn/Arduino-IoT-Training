@@ -1,0 +1,57 @@
+// Arduino IoT Training with Node Red
+// Module 5 - Node-Red
+// Author: Dr. Alfred Ang
+
+// Function node
+var newMsg = { payload: msg.payload.length };
+return newMsg;
+
+// Multiple Outputs
+var newMsg = { payload: msg.payload.length };
+return [msg, newMsg];
+
+// Ex: Multiple Outputs
+var msg1 = { payload:"msg1" };
+var msg2 = { payload:"msg2" };
+var msg3 = { payload:"msg3" };
+var msg4 = { payload:"msg4" };
+return [ [ msg1, msg2, msg3 ], msg4 ];
+
+// Ex: Even/Odd Function
+if (msg.payload%2===0) {
+    msg.payload = "even";
+} else {
+    msg.payload = "odd";
+}
+return msg;
+
+// Split the words
+var outputMsgs = [];
+var words = msg.payload.split(" ");
+for (var w in words) {
+    outputMsgs.push({payload:words[w]});
+}
+return [ outputMsgs ]
+
+// Change Node Flow 
+[{"id":"d9983e72.3d0da","type":"tab","label":"Flow 1"},{"id":"14924c7d.e8dc74","type":"inject","z":"d9983e72.3d0da","name":"","topic":"=","payload":"3","payloadType":"num","repeat":"","crontab":"","once":false,"onceDelay":"1","x":150,"y":140,"wires":[["1f98c047.f3d89"]]},{"id":"e83b2268.7e142","type":"debug","z":"d9983e72.3d0da","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":630,"y":120,"wires":[]},{"id":"1f98c047.f3d89","type":"function","z":"d9983e72.3d0da","name":"","func":"if (msg.payload%2===0) {\n    msg.payload = \"even\";\n} else {\n    msg.payload = \"odd\";\n}\n\nreturn msg;","outputs":1,"noerr":0,"x":330,"y":140,"wires":[["5631d041.fe0a2"]]},{"id":"5631d041.fe0a2","type":"change","z":"d9983e72.3d0da","name":"","rules":[{"t":"change","p":"payload","pt":"msg","from":"even","fromt":"str","to":"this is a even number","tot":"str"},{"t":"change","p":"payload","pt":"msg","from":"odd","fromt":"str","to":"this is an odd number","tot":"str"}],"action":"","property":"","from":"","to":"","reg":false,"x":480,"y":200,"wires":[["e83b2268.7e142"]]}]
+
+
+// Switch Node Flow
+[{"id":"d9983e72.3d0da","type":"tab","label":"Flow 1"},{"id":"14924c7d.e8dc74","type":"inject","z":"d9983e72.3d0da","name":"","topic":"=","payload":"C","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":"1","x":150,"y":140,"wires":[["30b122c3.a7dc9e"]]},{"id":"e83b2268.7e142","type":"debug","z":"d9983e72.3d0da","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":690,"y":140,"wires":[]},{"id":"30b122c3.a7dc9e","type":"switch","z":"d9983e72.3d0da","name":"","property":"payload","propertyType":"msg","rules":[{"t":"eq","v":"A","vt":"str"},{"t":"eq","v":"B","vt":"str"},{"t":"eq","v":"C","vt":"str"}],"checkall":"true","repair":false,"outputs":3,"x":310,"y":140,"wires":[["9d2206a6.2b93a8"],["44835690.ebe528"],["73dbe4db.b0382c"]]},{"id":"9d2206a6.2b93a8","type":"change","z":"d9983e72.3d0da","name":"","rules":[{"t":"set","p":"payload","pt":"msg","to":"Excellent!","tot":"str"}],"action":"","property":"","from":"","to":"","reg":false,"x":480,"y":80,"wires":[["e83b2268.7e142"]]},{"id":"44835690.ebe528","type":"change","z":"d9983e72.3d0da","name":"","rules":[{"t":"set","p":"payload","pt":"msg","to":"Good Work!","tot":"str"}],"action":"","property":"","from":"","to":"","reg":false,"x":480,"y":140,"wires":[["e83b2268.7e142"]]},{"id":"73dbe4db.b0382c","type":"change","z":"d9983e72.3d0da","name":"","rules":[{"t":"set","p":"payload","pt":"msg","to":"Work harder next time","tot":"str"}],"acti
+
+
+// Http request node - Get the Quake data
+[{"id":"ad65ea26.529a18","type":"inject","z":"9e538f88.61ac7","name":"Quakes","topic":"","payload":"","payloadType":"none","repeat":"900","crontab":"","once":true,"x":208,"y":1026,"wires":[["3a6ff750.c59008"]]},{"id":"3a6ff750.c59008","type":"http request","z":"9e538f88.61ac7","name":"","method":"GET","url":"http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.csv","x":386.5,"y":1025.999755859375,"wires":[["a566f3e5.5a991"]]},{"id":"a566f3e5.5a991","type":"csv","z":"9e538f88.61ac7","name":"","sep":",","hdrin":true,"hdrout":"","multi":"one","ret":"\\n","temp":"","x":556.0833740234375,"y":1026.208251953125,"wires":[["62f3e615.9d0c18"]]},{"id":"e0c32b1c.1f3cd8","type":"comment","z":"9e538f88.61ac7","name":"Earthquake !!!","info":"","x":201.33334350585938,"y":975.9583129882812,"wires":[]},{"id":"62f3e615.9d0c18","type":"debug","z":"9e538f88.61ac7","name":"","active":true,"console":"false","complete":"payload","x":737,"y":1026,"wires":[]}]
+
+
+// Ex: Http request node - Quake alert
+[{"id":"d90d291.70545d8","type":"tab","label":"Flow 1"},{"id":"a82ecf1e.b803d","type":"inject","z":"d90d291.70545d8","name":"Quakes","topic":"","payload":"","payloadType":"str","repeat":"900","crontab":"","once":true,"onceDelay":"","x":180,"y":260,"wires":[["e4935d4d.81a29"]]},{"id":"e4935d4d.81a29","type":"http request","z":"d90d291.70545d8","name":"","method":"GET","url":"http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.csv","tls":"","x":390,"y":260,"wires":[["f7789a72.851898"]]},{"id":"f7789a72.851898","type":"csv","z":"d90d291.70545d8","name":"","sep":",","hdrin":true,"hdrout":"","multi":"one","ret":"\\n","temp":"","skip":0,"x":570,"y":260,"wires":[["e940c6bf.82ea18","b00e07.d01261f8"]]},{"id":"c235729e.d0366","type":"comment","z":"d90d291.70545d8","name":"Earthquake !!!","info":"","x":210,"y":200,"wires":[]},{"id":"e940c6bf.82ea18","type":"switch","z":"d90d291.70545d8","name":"","property":"payload.mag","propertyType":"msg","rules":[{"t":"gte","v":"4","vt":"str"}],"checkall":"true","repair":false,"outputs":1,"x":750,"y":320,"wires":[["112bba8f.8669f5"]]},{"id":"112bba8f.8669f5","type":"change","z":"d90d291.70545d8","name":"","rules":[{"t":"set","p":"payload","pt":"msg","to":"PANIC!","tot":"str"}],"action":"","property":"","from":"","to":"","reg":false,"x":920,"y":320,"wires":[["b00e07.d01261f8"]]},{"id":"b00e07.d01261f8","type":"debug","z":"d90d291.70545d8","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":1130,"y":260,"wires":[]}]
+
+
+// Email node
+[{"id":"43c20c7a.cdbf24","type":"tab","label":"Flow 2"},{"id":"1371e4be.3cb31b","type":"inject","z":"43c20c7a.cdbf24","name":"","topic":"","payload":"today a is a great day","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":"","x":149,"y":156,"wires":[["e8671efb.3a32b"]]},{"id":"e8671efb.3a32b","type":"e-mail","z":"43c20c7a.cdbf24","server":"smtp.gmail.com","port":"587","secure":false,"name":"angch@tertiaryinfotech.com","dname":"email","x":450,"y":160,"wires":[]}]
+
+
+
+

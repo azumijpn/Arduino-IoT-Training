@@ -1,0 +1,138 @@
+/ Arduino IoT Training with Node Red
+// Module 2 - ESPresso Lite V2.0
+// Source: http://learn.espressolite.com/example-sketches
+
+//Blink Sketch
+void setup() {
+  Serial.begin(115200);
+  pinMode(2, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(2, LOW);
+  Serial.println("LED: On");
+  delay(1000);
+
+  digitalWrite(2, HIGH);
+  Serial.println("LED: Off");
+  delay(1000);
+}
+
+//ESpert Blink Sketch
+#include <ESPert.h>
+
+ESPert espert;
+
+void setup() {
+  espert.init();
+}
+
+void loop() {
+  espert.led.on();
+  espert.println("LED: On");
+  delay(1000);
+
+  espert.led.off();
+  espert.println("LED: Off");
+  delay(1000);
+}
+
+//ESpert Button Sketch
+#include <ESPert.h>
+
+ESPert espert;
+bool currentSwitch = true;
+
+void setup() {
+  espert.init();
+  espert.println("Press USER button to turn on LED.");
+}
+
+void loop() {
+  bool buttonPressed = espert.button.isOn();
+
+  if (buttonPressed != currentSwitch) {
+    if (buttonPressed) {
+      espert.println("Button: On");
+      espert.led.on();
+    } else {
+      espert.println("Button: Off");
+      espert.led.off();
+    }
+
+    currentSwitch = buttonPressed;
+  }
+}
+
+
+//ESpert OLED Sketch
+#include <ESPert.h>
+
+ESPert espert;
+
+void setup() {
+  espert.init();
+
+  espert.oled.init(); //display the Espert logo
+  delay(2000);
+
+  espert.oled.clear();
+  espert.oled.setTextSize(1); //currently not working due to some conflict in the OLED libraries
+  espert.oled.setTextColor(ESPERT_WHITE); 
+  espert.oled.setCursor(0, 0); // position cursor to top left corner
+
+//espert.oled.print ("1234"); // this display the text on the OLED without going to the next line
+  espert.oled.println("12345678901234567890"); //display text on OLED screen and move to the next line
+  espert.oled.println("2                  2");
+  espert.oled.println("3                  3");
+  espert.oled.println("4                  4");
+  espert.oled.println("5                  5");
+  espert.oled.println("6                  6");
+  espert.oled.println("7                  7");
+  espert.oled.println("8                  8");
+  espert.oled.setCursor(6, 16);
+  espert.oled.println("234567890123456789 1");
+  espert.oled.setCursor(6, 32);
+  espert.oled.println("234567890123456789 1");
+
+  espert.oled.update();
+}
+
+void loop() {
+}
+
+
+//ESpert DHT Sketch
+#include <ESPert.h>
+
+ESPert espert;
+
+void setup() {
+  espert.init();
+
+  espert.oled.init();
+
+  // Use espert.dht.init(gpio, type);
+  // Type can be DHT11 or DHT22
+  // Defualt will use DHT22 on GPIO12
+  espert.dht.init();
+
+  delay(2000);
+}
+
+void loop() {
+  bool isFarenheit = false;
+  float t = espert.dht.getTemperature(isFarenheit);
+  float h = espert.dht.getHumidity();
+
+  if (!isnan(t) && !isnan(h)) {
+    String dht = "Temperature: " + String(t) + (isFarenheit ?  " F" : " C") + "\n";
+    dht += "Humidity...: " + String(h) + " %\n";
+
+    espert.oled.clear();
+    espert.oled.println(dht);
+    espert.println(dht);
+  }
+
+  delay(5000);
+}

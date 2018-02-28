@@ -1,0 +1,239 @@
+// Arduino IoT Training with Node Red
+// Module 6 - IoT With Node-Red
+// Author: Dr. Alfred Ang
+
+// Node-Red flow
+[{"id":"d9983e72.3d0da","type":"tab","label":"Flow 1"},{"id":"bf74e228.40a26","type":"mqtt in","z":"d9983e72.3d0da","name":"","topic":"ESPert/tertiary888","qos":"2","broker":"e820c12b.3abdc","x":380,"y":360,"wires":[["d2fb665.284dc98"]]},{"id":"d2fb665.284dc98","type":"debug","z":"d9983e72.3d0da","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"payload","x":630,"y":360,"wires":[]},{"id":"e820c12b.3abdc","type":"mqtt-broker","z":"","name":"","broker":"iot.eclipse.org","port":"1883","clientid":"","usetls":false,"compatmode":true,"keepalive":"60","cleansession":true,"willTopic":"","willQos":"0","willPayload":"","birthTopic":"","birthQos":"0","birthPayload":""}]
+
+
+//Node-RED MQTT Button
+#include <ESPert.h>
+  
+  ESPert espert;
+  
+  //const char* mqtt_server = "mqtt.espert.io";
+  const char* mqtt_server = "iot.eclipse.org";
+  
+  int currentSwitch = true;
+  //String outTopic = "ESPert/" + String(espert.info.getChipId()) + "/Button";
+  String outTopic = "ESPert/tertiary888";
+  
+  void setup() {
+    espert.init();
+  
+    espert.oled.init();
+    delay(2000);
+  
+    espert.println("Press USER button to turn on LED.");
+  
+    espert.oled.clear();
+    espert.oled.println(espert.info.getId());
+    espert.oled.println();
+  
+    int mode = espert.wifi.init();
+  
+    if (mode == ESPERT_WIFI_MODE_CONNECT) {
+      espert.println(">>> WiFi mode: connected.");
+      espert.oled.println("WiFi: connected.");
+      espert.oled.print("IP..: ");
+      espert.oled.println(espert.wifi.getLocalIP());
+  
+      espert.mqtt.init(mqtt_server, 1883);
+    } else if (mode == ESPERT_WIFI_MODE_DISCONNECT) {
+      espert.println(">>> WiFi mode: disconnected.");
+      espert.oled.println("WiFi: not connected.");
+    }
+  }
+  
+  void loop() {
+    if (espert.mqtt.connect()) {
+      espert.println("MQTT: Connected");
+      espert.println("MQTT: Out Topic " + outTopic);
+    }
+  
+    bool buttonPressed = espert.button.isOn();
+  
+    if (buttonPressed != currentSwitch) {
+      if (buttonPressed) {
+        espert.led.on();
+      } else {
+        espert.led.off();
+      }
+  
+      String outString = "{\"button\":\"" + String(buttonPressed ? 1 : 0) + "\", ";
+      outString += "\"name\":\"" + String(espert.info.getId()) + "\"}";
+      espert.println(outString);
+      espert.mqtt.publish(outTopic, outString);
+      currentSwitch = buttonPressed;
+    }
+  }
+
+
+//Node-RED MQTT Button
+#include <ESPert.h>
+
+const char* mqtt_server = "iot.eclipse.org";
+
+ESPert espert;
+//String outTopic = "ESPert/" + String(espert.info.getChipId()) + "/DHT";
+String outTopic = "ESPert/tertiary888";
+
+void setup() {
+  espert.init();
+  espert.dht.init();
+
+  espert.oled.init();
+  delay(2000);
+
+  espert.oled.clear();
+  espert.oled.println(espert.info.getId());
+  espert.oled.println();
+
+  int mode = espert.wifi.init();
+
+  if (mode == ESPERT_WIFI_MODE_CONNECT) {
+    espert.println(">>> WiFi mode: connected.");
+    espert.oled.println("WiFi: connected.");
+    espert.oled.print("IP..: ");
+    espert.oled.println(espert.wifi.getLocalIP());
+    espert.mqtt.init(mqtt_server, 1883);
+  } else if (mode == ESPERT_WIFI_MODE_DISCONNECT) {
+    espert.println(">>> WiFi mode: disconnected.");
+    espert.oled.println("WiFi: not connected.");
+  }
+}
+
+void loop() {
+  if (espert.mqtt.connect()) {
+    espert.println("MQTT: Connected");
+    espert.println("MQTT: Out Topic " + outTopic);
+  }
+
+  float t = espert.dht.getTemperature();
+  float h = espert.dht.getHumidity();
+
+  if (!isnan(t) && !isnan(h)) {
+    String outString = "{\"temperature\":\"" + String(t) + "\", ";
+    outString += "\"humidity\":\"" + String(h) + "\", ";
+    outString += "\"name\":\"" + String(espert.info.getId()) + "\"}";
+    espert.println(outString);
+    espert.mqtt.publish(outTopic, outString);
+  }
+
+  delay(5000);
+}
+
+// Node-Red flow - DHT
+
+  [{"id":"d9983e72.3d0da","type":"tab","label":"Flow 1"},{"id":"bf74e228.40a26","type":"mqtt in","z":"d9983e72.3d0da","name":"","topic":"ESPert/tertiary888","qos":"2","broker":"e820c12b.3abdc","x":350,"y":340,"wires":[["cb7664e.f2a8798","9c4fe805.7695f8"]]},{"id":"4bd88012.2bda4","type":"function","z":"d9983e72.3d0da","name":"","func":"temp = {payload: msg.payload.temperature};\nhumid = {payload: msg.payload.humidity};\n\n\nreturn [temp,humid];","outputs":2,"noerr":0,"x":690,"y":360,"wires":[["a3172285.88f9c"],["f6636943.844318"]]},{"id":"a3172285.88f9c","type":"debug","z":"d9983e72.3d0da","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":850,"y":300,"wires":[]},{"id":"f6636943.844318","type":"debug","z":"d9983e72.3d0da","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":850,"y":400,"wires":[]},{"id":"cb7664e.f2a8798","type":"debug","z":"d9983e72.3d0da","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":620,"y":200,"wires":[]},{"id":"9c4fe805.7695f8","type":"json","z":"d9983e72.3d0da","name":"","property":"payload","action":"","pretty":false,"x":540,"y":360,"wires":[["4bd88012.2bda4"]]},{"id":"e820c12b.3abdc","type":"mqtt-broker","z":"","name":"","broker":"iot.eclipse.org","port":"1883","clientid":"","usetls":false,"compatmode":true,"keepalive":"60","cleansession":true,"willTopic":"","willQos":"0","willPayload":"","birthTopic":"","birthQos":"0","birthPayload":""}]
+
+
+
+  // Ex: Node-Red DHT Dashboard
+
+  [{"id":"da686e43.c9816","type":"tab","label":"Flow 1"},{"id":"e2ac6b10.c68b08","type":"mqtt in","z":"da686e43.c9816","name":"","topic":"ESPert/tertiary888","qos":"2","broker":"e820c12b.3abdc","x":250,"y":280,"wires":[["a0fa060d.5002d8","87d7a300.1a5b4"]]},{"id":"8540b160.132f1","type":"function","z":"da686e43.c9816","name":"","func":"temp = {payload: parseFloat(msg.payload.temperature)};\nhumid = {payload: parseFloat(msg.payload.humidity)};\n\n\nreturn [temp,humid];","outputs":2,"noerr":0,"x":590,"y":300,"wires":[["ea0bd58f.de7798","b87bd0.1dd6643"],["98551094.219c6","7270311e.84ec5"]]},{"id":"ea0bd58f.de7798","type":"debug","z":"da686e43.c9816","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":790,"y":200,"wires":[]},{"id":"98551094.219c6","type":"debug","z":"da686e43.c9816","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":790,"y":260,"wires":[]},{"id":"a0fa060d.5002d8","type":"debug","z":"da686e43.c9816","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":520,"y":140,"wires":[]},{"id":"87d7a300.1a5b4","type":"json","z":"da686e43.c9816","name":"","property":"payload","action":"","pretty":false,"x":440,"y":300,"wires":[["8540b160.132f1"]]},{"id":"7270311e.84ec5","type":"ui_gauge","z":"da686e43.c9816","name":"","group":"cd981e88.c8aa4","order":0,"width":0,"height":0,"gtype":"gage","title":"Pressure","label":"units","format":"{{value}}","min":0,"max":"100","colors":["#00b500","#e6e600","#ca3838"],"seg1":"","seg2":"","x":780,"y":400,"wires":[]},{"id":"b87bd0.1dd6643","type":"ui_gauge","z":"da686e43.c9816","name":"","group":"cd981e88.c8aa4","order":0,"width":"0","height":"0","gtype":"gage","title":"Temperature","label":"units","format":"{{value}}","min":0,"max":"100","colors":["#00b500","#e6e600","#ca3838"],"seg1":"","seg2":"","x":790,"y":340,"wires":[]},{"id":"e820c12b.3abdc","type":"mqtt-broker","z":"","name":"","broker":"iot.eclipse.org","port":"1883","clientid":"","usetls":false,"compatmode":true,"keepalive":"60","cleansession":true,"willTopic":"","willQos":"0","willPayload":"","birthTopic":"","birthQos":"0","birthPayload":""},{"id":"cd981e88.c8aa4","type":"ui_group","z":"","name":"Living Room","tab":"ad97adde.26015","disp":true,"width":"4","collapse":false},{"id":"ad97adde.26015","type":"ui_tab","z":"","name":"Home","icon":"dashboard"}]
+
+
+
+
+// Node-Red MQTT LED
+#include <ESPert.h>
+
+ESPert espert;
+
+//IPAddress mqtt_server(192,168,77,1);
+//const char* mqtt_server = "mqtt.espert.io";
+const char* mqtt_server = "iot.eclipse.org";
+
+int currentSwitch = true;
+String outTopic = "ESPert/" + String(espert.info.getChipId()) + "/LED";
+
+String inTopic = "ESPert/" + String(espert.info.getChipId()) + "/LED";;
+
+void callback(char* topic, byte* payload, unsigned int length) {
+  byte* p = (byte*)malloc(length+1);
+  // Copy the payload to the new buffer
+  memcpy(p,payload,length);
+  p[length] = 0;
+  String strPayload = String((char *)p);
+  free(p);
+  
+  espert.println("Receive: " + strPayload);
+  String key = "payload";
+
+  if (espert.json.init(strPayload) && espert.json.containsKey(key)) {
+  
+    String value = espert.json.get(key);
+
+    if (value == "0") {
+      espert.led.off();
+      espert.println("LED: Off");
+    } else if (value == "1") {
+      espert.led.on();
+      espert.println("LED: On");
+    } else if (value == "2") {
+      if( espert.led.isOn() ) {
+        espert.led.off();
+        espert.println("LED (Toglle): off");
+      }
+      else {
+        espert.led.on();
+        espert.println("LED (Toglle): On");
+      }
+    }
+
+    String outString  = "{\"status\":\"" + String(espert.led.isOn() ? 1 : 0) + "\", ";
+    outString += "\"name\":\"" + String(espert.info.getId()) + "\"}";
+    espert.println("Send...: " + outString);
+    espert.mqtt.publish(outTopic, outString);
+  }
+}
+
+void setup() {
+  espert.init();
+  espert.mqtt.init(mqtt_server, 1883, callback);
+
+  espert.oled.init();
+  delay(2000);
+
+  espert.println("Press USER button to turn on LED.");
+
+  espert.oled.clear();
+  espert.oled.println(espert.info.getId());
+  espert.oled.println();
+
+  int mode = espert.wifi.init();
+
+  if (mode == ESPERT_WIFI_MODE_CONNECT) {
+    espert.println(">>> WiFi mode: connected.");
+    espert.oled.println("WiFi: connected.");
+    espert.oled.print("IP..: ");
+    espert.oled.println(espert.wifi.getLocalIP());
+  } else if (mode == ESPERT_WIFI_MODE_DISCONNECT) {
+    espert.println(">>> WiFi mode: disconnected.");
+    espert.oled.println("WiFi: not connected.");
+  }
+}
+
+void loop() {
+  if (espert.mqtt.connect()) {
+    espert.println("MQTT: Connected");
+    espert.println("MQTT: Out Topic " + outTopic);
+    espert.mqtt.subscribe(inTopic);
+    Serial.println("MQTT: Subscribed " + inTopic);
+  }
+
+  bool buttonPressed = espert.button.isOn();
+
+  if (buttonPressed != currentSwitch) {
+    String outString  = "{\"cmd\":\"" + String(buttonPressed ? 1 : 0) + "\", ";
+    outString += "\"name\":\"" + String(espert.info.getId()) + "\"}";
+    espert.println("Send...: " + outString);
+    espert.mqtt.publish(outTopic, outString);
+    currentSwitch = buttonPressed;
+  }
+}
+
+// Node-Red flow - LED
+
+[{"id":"da686e43.c9816","type":"tab","label":"Flow 1"},{"id":"984ccef.2ab6b3","type":"inject","z":"da686e43.c9816","name":"1","topic":"","payload":"1","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":210,"y":280,"wires":[["bcc4308c.47477"]]},{"id":"ccaaf88b.9f4668","type":"inject","z":"da686e43.c9816","name":"0","topic":"","payload":"0","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":210,"y":380,"wires":[["bcc4308c.47477"]]},{"id":"bcc4308c.47477","type":"mqtt out","z":"da686e43.c9816","name":"","topic":"ESPert/13782577/LED","qos":"","retain":"","broker":"e820c12b.3abdc","x":580,"y":320,"wires":[]},{"id":"e820c12b.3abdc","type":"mqtt-broker","z":"","name":"","broker":"iot.eclipse.org","port":"1883","clientid":"","usetls":false,"compatmode":true,"keepalive":"60","cleansession":true,"willTopic":"","willQos":"0","willPayload":"","birthTopic":"","birthQos":"0","birthPayload":""}]
