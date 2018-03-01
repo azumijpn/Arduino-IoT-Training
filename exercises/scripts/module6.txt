@@ -1,6 +1,6 @@
 // Arduino IoT Training with Node Red
 // Module 6 - IoT With Node-Red
-// Author: Dr. Alfred Ang
+// Source: https://github.com/JimmySoftware/ESPert2
 
 // Node-Red flow
 [{"id":"d9983e72.3d0da","type":"tab","label":"Flow 1"},{"id":"bf74e228.40a26","type":"mqtt in","z":"d9983e72.3d0da","name":"","topic":"ESPert/tertiary888","qos":"2","broker":"e820c12b.3abdc","x":380,"y":360,"wires":[["d2fb665.284dc98"]]},{"id":"d2fb665.284dc98","type":"debug","z":"d9983e72.3d0da","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"payload","x":630,"y":360,"wires":[]},{"id":"e820c12b.3abdc","type":"mqtt-broker","z":"","name":"","broker":"iot.eclipse.org","port":"1883","clientid":"","usetls":false,"compatmode":true,"keepalive":"60","cleansession":true,"willTopic":"","willQos":"0","willPayload":"","birthTopic":"","birthQos":"0","birthPayload":""}]
@@ -234,6 +234,16 @@ void loop() {
   }
 }
 
+// Ex: DHT
+
+var temp = {payload: msg.payload.temperature};
+var humid = {payload: msg.payload.humidity};
+return [temp,humid];
+
+
 // Node-Red flow - LED
 
 [{"id":"da686e43.c9816","type":"tab","label":"Flow 1"},{"id":"984ccef.2ab6b3","type":"inject","z":"da686e43.c9816","name":"1","topic":"","payload":"1","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":210,"y":280,"wires":[["bcc4308c.47477"]]},{"id":"ccaaf88b.9f4668","type":"inject","z":"da686e43.c9816","name":"0","topic":"","payload":"0","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":210,"y":380,"wires":[["bcc4308c.47477"]]},{"id":"bcc4308c.47477","type":"mqtt out","z":"da686e43.c9816","name":"","topic":"ESPert/13782577/LED","qos":"","retain":"","broker":"e820c12b.3abdc","x":580,"y":320,"wires":[]},{"id":"e820c12b.3abdc","type":"mqtt-broker","z":"","name":"","broker":"iot.eclipse.org","port":"1883","clientid":"","usetls":false,"compatmode":true,"keepalive":"60","cleansession":true,"willTopic":"","willQos":"0","willPayload":"","birthTopic":"","birthQos":"0","birthPayload":""}]
+
+
+

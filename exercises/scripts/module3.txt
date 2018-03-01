@@ -1,6 +1,6 @@
 / Arduino IoT Training with Node Red
 // Module 3 - IoT via ESPERT MQTT
-// Author: Dr. Alfred Ang
+// Source: http://learn.espressolite.com/example-sketches
 
 //ESPERT MQTT Button
 #include <ESPert.h>

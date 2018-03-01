@@ -1,86 +1,65 @@
-#include <ESPert.h>
+#define BLYNK_PRINT Serial
 
-ESPert espert;
 
-const char* mqtt_server = "mqtt.espert.io";
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+#include <DHT.h>
 
-int currentSwitch = true;
-String outTopic = "ESPert/" + String(espert.info.getChipId()) + "/LED";
-String inTopic = "ESPert/" + String(espert.info.getChipId()) + "/LED";
+// You should get Auth Token in the Blynk App.
+// Go to the Project Settings (nut icon).
+char auth[] = "xxx";
 
-void callback(char* topic, byte* payload, unsigned int length) {
-  String strPayload = String((char*)payload).substring(0, length);
-  espert.println("Receive: " + strPayload);
+// Your WiFi credentials.
+// Set password to "" for open networks.
+char ssid[] = "xxx";
+char pass[] = "xxx";
 
-  if (espert.json.init(strPayload)) {
-    if (espert.json.containsKey("cmd")) {
-      String value = espert.json.get("cmd");
+#define DHTPIN 12          // What digital pin we're connected to
 
-      if (value == "0") {
-        espert.led.off();
-        espert.println("LED: Off");
-      } else if (value == "1") {
-        espert.led.on();
-        espert.println("LED: On");
-      } else if (value == "2") {
-        if (espert.led.isOn()) {
-          espert.led.off();
-          espert.println("LED (Toglle): off");
-        } else {
-          espert.led.on();
-          espert.println("LED (Toglle): On");
-        }
-      }
+// Uncomment whatever type you're using!
+//#define DHTTYPE DHT11     // DHT 11
+#define DHTTYPE DHT22   // DHT 22, AM2302, AM2321
+//#define DHTTYPE DHT21   // DHT 21, AM2301
 
-      String outString = "{\"status\":\"" + String(espert.led.isOn() ? 1 : 0) + "\", ";
-      outString += "\"name\":\"" + String(espert.info.getId()) + "\"}";
-      espert.println("Send...: " + outString);
-      espert.mqtt.publish(outTopic, outString);
-    }
+DHT dht(DHTPIN, DHTTYPE);
+BlynkTimer timer;
+
+// This function sends Arduino's up time every second to Virtual Pin (5).
+// In the app, Widget's reading frequency should be set to PUSH. This means
+// that you define how often to send data to Blynk App.
+void sendSensor()
+{
+  float h = dht.readHumidity();
+  float t = dht.readTemperature(); // or dht.readTemperature(true) for Fahrenheit
+
+  if (isnan(h) || isnan(t)) {
+    Serial.println("Failed to read from DHT sensor!");
+    return;
   }
+  // You can send any value at any time.
+  // Please don't send more that 10 values per second.
+  Blynk.virtualWrite(V5, h);
+  Blynk.virtualWrite(V6, t);
 }
 
-void setup() {
-  espert.init();
-  espert.mqtt.init(mqtt_server, 8000, callback);
+void setup()
+{
+  // Debug console
+  Serial.begin(9600);
 
-  espert.oled.init();
-  delay(2000);
+  Blynk.begin(auth, ssid, pass);
+  // You can also specify server:
+  //Blynk.begin(auth, ssid, pass, "blynk-cloud.com", 8442);
+  //Blynk.begin(auth, ssid, pass, IPAddress(192,168,1,100), 8442);
 
-  espert.println("Press USER button to turn on LED.");
+  dht.begin();
 
-  espert.oled.clear();
-  espert.oled.println(espert.info.getId());
-  espert.oled.println();
-
-  int mode = espert.wifi.init();
-
-  if (mode == ESPERT_WIFI_MODE_CONNECT) {
-    espert.println(">>> WiFi mode: connected.");
-    espert.oled.println("WiFi: connected.");
-    espert.oled.print("IP..: ");
-    espert.oled.println(espert.wifi.getLocalIP());
-  } else if (mode == ESPERT_WIFI_MODE_DISCONNECT) {
-    espert.println(">>> WiFi mode: disconnected.");
-    espert.oled.println("WiFi: not connected.");
-  }
+  // Setup a function to be called every second
+  timer.setInterval(1000L, sendSensor);
 }
 
-void loop() {
-  if (espert.mqtt.connect()) {
-    espert.println("MQTT: Connected");
-    espert.println("MQTT: Out Topic " + outTopic);
-    espert.mqtt.subscribe(inTopic);
-    Serial.println("MQTT: Subscribed " + inTopic);
-  }
-
-  bool buttonPressed = espert.button.isOn();
-
-  if (buttonPressed != currentSwitch) {
-    String outString = "{\"cmd\":\"" + String(buttonPressed ? 1 : 0) + "\", ";
-    outString += "\"name\":\"" + String(espert.info.getId()) + "\"}";
-    espert.println("Send...: " + outString);
-    espert.mqtt.publish(outTopic, outString);
-    currentSwitch = buttonPressed;
-  }
+void loop()
+{
+  Blynk.run();
+  timer.run();
 }

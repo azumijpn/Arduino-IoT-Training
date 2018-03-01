@@ -5,8 +5,8 @@ ESPert espert;
 const char* mqtt_server = "mqtt.espert.io";
 
 int currentSwitch = true;
-String outTopic = "ESPert/" + String(espert.info.getChipId()) + "/Button";
-//String outTopic = "ESPert/tertiary888/2";
+//String outTopic = "ESPert/" + String(espert.info.getChipId()) + "/Button";
+String outTopic = "ESPert/tertiary888/LED";
 
 void setup() {
   espert.init();
